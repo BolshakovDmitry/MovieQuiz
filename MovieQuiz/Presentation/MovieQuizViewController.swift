@@ -68,6 +68,7 @@ final class MovieQuizViewController: UIViewController {
         let buttonText: String
     }
     
+    
     struct bestResultModel{
         let record: Int
         let timeWhenFinished: Date
