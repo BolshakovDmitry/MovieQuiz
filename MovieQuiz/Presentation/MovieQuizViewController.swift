@@ -76,8 +76,6 @@ final class MovieQuizViewController: UIViewController {
         var timeWhenFinished: Date
     }
     
-
-    
     @IBOutlet private weak var yesButton: UIButton!
     @IBOutlet private weak var noButton: UIButton!
     
@@ -107,7 +105,6 @@ final class MovieQuizViewController: UIViewController {
             self.yesButton.isEnabled = true
             self.noButton.isEnabled = true
            }
-        
     }
     
     private func showNextQuestionOrResults() {
@@ -136,7 +133,6 @@ final class MovieQuizViewController: UIViewController {
             counterLabel.text = "\(currentQuestionIndex + 1)/10"
             showPicture()
         }
-        
     }
     
     private func showResults(quiz result: QuizResultsViewModel) { // показывает алерту
