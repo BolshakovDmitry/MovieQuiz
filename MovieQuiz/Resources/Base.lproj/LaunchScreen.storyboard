@@ -17,16 +17,16 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="LaunchScreen" translatesAutoresizingMaskIntoConstraints="NO" id="3CT-fq-OG7">
-                                <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                                <rect key="frame" x="0.0" y="-10" width="414" height="916"/>
                             </imageView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <constraints>
                             <constraint firstItem="3CT-fq-OG7" firstAttribute="leading" secondItem="Ze5-6b-2t3" secondAttribute="leading" id="8pN-wC-2Op"/>
-                            <constraint firstAttribute="bottom" secondItem="3CT-fq-OG7" secondAttribute="bottom" id="Rqs-fw-J04"/>
+                            <constraint firstAttribute="bottom" secondItem="3CT-fq-OG7" secondAttribute="bottom" constant="-10" id="Rqs-fw-J04"/>
                             <constraint firstAttribute="trailing" secondItem="3CT-fq-OG7" secondAttribute="trailing" id="Rzf-FT-PTi"/>
-                            <constraint firstItem="3CT-fq-OG7" firstAttribute="top" secondItem="Ze5-6b-2t3" secondAttribute="top" id="xF3-tm-qPW"/>
+                            <constraint firstItem="3CT-fq-OG7" firstAttribute="top" secondItem="Ze5-6b-2t3" secondAttribute="top" constant="-10" id="xF3-tm-qPW"/>
                         </constraints>
                     </view>
                 </viewController>
