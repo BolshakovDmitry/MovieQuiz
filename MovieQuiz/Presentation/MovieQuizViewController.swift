@@ -2,86 +2,25 @@ import UIKit
 
 
 final class MovieQuizViewController: UIViewController {
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        showPicture() // показ первой картинки для старта квиза
-    }
     
     @IBOutlet private weak var picture: UIImageView!
     @IBOutlet private weak var counterLabel: UILabel!
-    
-    private let questions: [QuizQuestion] = [
-        QuizQuestion(
-            image: "The Godfather",
-            rating: 9.2,
-            correctAnswer: true),
-        QuizQuestion(
-            image: "The Dark Knight",
-            rating: 9,
-            correctAnswer: true),
-        QuizQuestion(
-            image: "Kill Bill",
-            rating: 8.1,
-            correctAnswer: true),
-        QuizQuestion(
-            image: "The Avengers",
-            rating: 8,
-            correctAnswer: true),
-        QuizQuestion(
-            image: "Deadpool",
-            rating: 8,
-            correctAnswer: true),
-        QuizQuestion(
-            image: "The Green Knight",
-            rating: 6.6,
-            correctAnswer: true),
-        QuizQuestion(
-            image: "Old",
-            rating: 5.8,
-            correctAnswer: false),
-        QuizQuestion(
-            image: "The Ice Age Adventures of Buck Wild",
-            rating: 4.3,
-            correctAnswer: false),
-        QuizQuestion(
-            image: "Tesla",
-            rating: 5.1,
-            correctAnswer: false),
-        QuizQuestion(
-            image: "Vivarium",
-            rating: 5.8,
-            correctAnswer: false)
-    ]
     
     private var currentQuestionIndex = 0
     private var correctAnswers = 0
     private var gamesPlayed = 0
     private var record = 0
     private var resultBase = bestResultModel(record: 0, timeWhenFinished: Date())
-    
-    private struct QuizQuestion {
-        let image: String
-        let rating: Double
-        let correctAnswer: Bool
-    }
-    
-    private struct QuizResultsViewModel {
-        let title: String
-        let text: String
-        let buttonText: String
-    }
-    
-    struct bestResultModel{
-        var record: Int
-        var timeWhenFinished: Date
-    }
-    
 
-    
     @IBOutlet private weak var yesButton: UIButton!
     @IBOutlet private weak var noButton: UIButton!
     
-    @IBAction private func yesButtonClicked(_ sender: UIButton) { //сравниваем результат ответа с правильным из массива и вызываем метод для отображения результат ответа(ввиде цветной марки вокруг картинки)
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        showPicture() // показ первой картинки для старта квиза
+    }
+    
+    @IBAction private func yesButtonClicked(_ sender: UIButton) { //сравниваем результат ответа с правильным из массива и вызываем метод для отображения результат ответа(в виде цветной рамки вокруг картинки)
         yesButton.isEnabled = false // блок клавиши на время показа рамки рехультата (1 сек)
         let currentQuestion = questions[currentQuestionIndex]
         let givenAnswer = true
@@ -107,7 +46,6 @@ final class MovieQuizViewController: UIViewController {
             self.yesButton.isEnabled = true
             self.noButton.isEnabled = true
            }
-        
     }
     
     private func showNextQuestionOrResults() {
@@ -125,7 +63,7 @@ final class MovieQuizViewController: UIViewController {
                 resultBase.timeWhenFinished = date
             }
             let winPercentage = Double(correctAnswers) / Double(questions.count) * 100
-            let text = "Ваш результат: \(correctAnswers)/10 \n Количество сыгранных квизов: \(gamesPlayed) \n Рекорд: \(resultBase.record) \(resultBase.timeWhenFinished.dateTimeString) \n Средняя точность: \(winPercentage.formatWithTwoDecimalPlaces())%"
+            let text = "Ваш результат: \(correctAnswers)/10 \n Количество сыгранных квизов: \(gamesPlayed) \n Рекорд: \(resultBase.record)/10 (\(resultBase.timeWhenFinished.dateTimeString)) \n Средняя точность: \(winPercentage.formatWithTwoDecimalPlaces())%"
             let viewModel = QuizResultsViewModel( // 2
                 title: "Этот раунд окончен!",
                 text: text,
@@ -136,7 +74,6 @@ final class MovieQuizViewController: UIViewController {
             counterLabel.text = "\(currentQuestionIndex + 1)/10"
             showPicture()
         }
-        
     }
     
     private func showResults(quiz result: QuizResultsViewModel) { // показывает алерту
