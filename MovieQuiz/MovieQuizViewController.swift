@@ -1,11 +1,6 @@
 import UIKit
 
-final class MovieQuizViewController: UIViewController {
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        showPicture()
-        
-    }
+class MovieQuizViewController: UIViewController {
     
     struct QuizQuestion {
         let image: String
@@ -62,13 +57,15 @@ final class MovieQuizViewController: UIViewController {
             rating: 5.8,
             correctAnswer: false)
     ]
-    
+ 
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        showPicture()
+    }
     
     @IBOutlet private weak var picture: UIImageView!
     @IBOutlet private weak var counterLabel: UILabel!
-    @IBOutlet weak var noButton: UIButton!
-    @IBOutlet var yesButton: [UIButton]!
-    
+
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
         let currentQuestion = questions[currentQuestionIndex] // 1
         let givenAnswer = true // 2
@@ -152,7 +149,6 @@ final class MovieQuizViewController: UIViewController {
         let record: Int
         let timeWhenFinished: Date
     }
-    
     
     private func calculateBestResult(resultModel: bestResultModel) -> String {
         if bestResultModelArray.isEmpty == true {
