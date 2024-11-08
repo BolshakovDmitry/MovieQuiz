@@ -5,5 +5,5 @@ struct QuizResultsViewModel {
     var title: String
     var text: String
     var buttonText: String
-    var completion: (() -> Void)// Замыкание без параметров
+    var completion: (() -> Void)
 }

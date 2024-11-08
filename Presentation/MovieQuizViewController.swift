@@ -1,6 +1,6 @@
 import UIKit
 
-class MovieQuizViewController: UIViewController {
+final class MovieQuizViewController: UIViewController {
     
     @IBOutlet private weak var picture: UIImageView!
     @IBOutlet private weak var counterLabel: UILabel!
@@ -9,9 +9,8 @@ class MovieQuizViewController: UIViewController {
     
     private var questionFactory: QuestionFactoryProtocol?
     private var currentQuestion: QuizQuestion?
-    private var alertPresenter: AlertPresenterProtocol?
     private var statisticService: StatisticServiceProtocol?
-   
+    
     private let questionsAmount: Int = 10
     private var currentQuestionIndex = 0
     private var correctAnswers = 0
@@ -19,22 +18,21 @@ class MovieQuizViewController: UIViewController {
     
     override func viewDidLoad() {
         
-    super.viewDidLoad()
+        super.viewDidLoad()
         
-    let qf = QuestionFactory() // экземпляр фабрики Вопросов
-    qf.delegate = self
-    self.questionFactory = qf
-    
-    let ap = AlertPresenter() // экземпляр алерты
-    ap.delegate = self
-    self.alertPresenter = ap
+        picture.layer.masksToBounds = true
+        picture.layer.borderWidth = 8
         
-    let ss = StatisticService() // экземпляр класса-обработчика данных для показа алерты
-    ss.delegate = self
-    self.statisticService = ss
+        let qf = QuestionFactory() // экземпляр фабрики Вопросов
+        qf.delegate = self
+        self.questionFactory = qf
         
-    questionFactory?.requestNextQuestion() // запрос вопроса для показа картинки и начала квиза
-}
+        let ss = StatisticService() // экземпляр класса-обработчика данных для показа алерты
+        ss.delegate = self
+        self.statisticService = ss
+        
+        questionFactory?.requestNextQuestion() // запрос вопроса для показа картинки и начала квиза
+    }
     
     @IBAction private func yesButtonClicked(_ sender: UIButton) { //сравниваем результат ответа с правильным из массива и вызываем метод для отображения результат ответа(в виде цветной рамки вокруг картинки)
         makeButtonsDisable(toggle: true) // блок клавиш на время показа рамки рехультата (1 сек)
@@ -42,7 +40,7 @@ class MovieQuizViewController: UIViewController {
         let givenAnswer = true
         showAnswerResult(isCorrect: givenAnswer == theCurrentQuestion.correctAnswer)
     }
-        
+    
     @IBAction private func noButtonClicked(_ sender: UIButton) {
         makeButtonsDisable(toggle: true)
         guard let theCurrentQuestion = currentQuestion else { return }
@@ -61,8 +59,6 @@ class MovieQuizViewController: UIViewController {
     }
     
     private func showAnswerResult(isCorrect: Bool) { // окраска картинки в зеленый/красный цвет в зависимости от правильности ответа
-        picture.layer.masksToBounds = true
-        picture.layer.borderWidth = 8
         picture.layer.borderColor = isCorrect ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
         if isCorrect {
             correctAnswers += 1 // если ответ корректный инкрементируем correctAnswers
@@ -70,13 +66,13 @@ class MovieQuizViewController: UIViewController {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             self.showNextQuestionOrResults() // показ либо след вопроса либо алерты и данными
             self.makeButtonsDisable(toggle: false)
-           }
+        }
     }
     
     private func showNextQuestionOrResults() {
         if currentQuestionIndex == questionsAmount - 1 { // конец квиза и логика для отображения алерты с результатми
             statisticService?.store(correct: correctAnswers, total: questionsAmount)
-            alertPresenter?.showAlert(with: textForAlert)
+            AlertPresenter.showAlert(with: textForAlert, delegate: self)
         } else { // не конец, показывем след картинку
             currentQuestionIndex += 1
             counterLabel.text = "\(currentQuestionIndex + 1)/10"
@@ -87,7 +83,7 @@ class MovieQuizViewController: UIViewController {
     private func showPicture(question: QuizQuestion?) { // обновляет картинку и убирает цвет рамки
         guard let theQuestion = question else { return }
         picture.image = UIImage(named: theQuestion.image) ?? UIImage()
-        picture.layer.borderWidth = 0
+        picture.layer.borderColor = UIColor.ypBackground.cgColor
     }
 }
 
@@ -114,12 +110,11 @@ extension MovieQuizViewController: AlertPresenterDelegate{
 
 extension MovieQuizViewController: StatisticServiceDelegate{
     func didReceiveAlerttext(text: String)  {
-        textForAlert = QuizResultsViewModel(title: "Этот раунд окончен!", text: text, buttonText: "Сыграть ещё раз", completion:
-        {
-            self.questionFactory?.requestNextQuestion()
-            self.currentQuestionIndex = 0 // обнуляем поля для нового квиза
-            self.correctAnswers = 0
-            self.counterLabel.text = "1/10" }
+        textForAlert = QuizResultsViewModel(title: "Этот раунд окончен!", text: text, buttonText: "Сыграть ещё раз", completion:{
+        self.questionFactory?.requestNextQuestion()
+        self.currentQuestionIndex = 0 // обнуляем поля для нового квиза
+        self.correctAnswers = 0
+        self.counterLabel.text = "1/10" }
         )
     }
 }

@@ -1,11 +1,11 @@
 
 import UIKit
 
-class AlertPresenter: AlertPresenterProtocol {
+final class AlertPresenter: AlertPresenterProtocol {
     
     weak var delegate: AlertPresenterDelegate?
     
-    func showAlert(with resultViewModel: QuizResultsViewModel){
+    static func showAlert(with resultViewModel: QuizResultsViewModel, delegate: AlertPresenterDelegate?){
         let alert = UIAlertController(
             title: resultViewModel.title,
             message: resultViewModel.text,

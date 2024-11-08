@@ -1,7 +1,7 @@
 
 import Foundation
 
-class StatisticService: StatisticServiceProtocol {
+final class StatisticService: StatisticServiceProtocol {
     
     weak var delegate: StatisticServiceDelegate?
     
@@ -12,6 +12,7 @@ class StatisticService: StatisticServiceProtocol {
         case totalAccuracy
         case bestCorrectAnswears
         case totalGamesPlayed
+        case totalCorrectAnswears
     }
    
     var currentCount: Int {
@@ -20,6 +21,15 @@ class StatisticService: StatisticServiceProtocol {
         }
         set {
             userDefaults.set(newValue, forKey: Keys.currentCount.rawValue)
+        }
+    }
+    
+    var totalCorrectAnswears: Int {
+        get {
+            return userDefaults.integer(forKey: Keys.totalCorrectAnswears.rawValue)
+        }
+        set {
+            userDefaults.set(newValue, forKey: Keys.totalCorrectAnswears.rawValue)
         }
     }
 
@@ -49,6 +59,8 @@ class StatisticService: StatisticServiceProtocol {
         
     func store(correct count: Int, total questionsQuantity: Int) {
         
+        self.totalCorrectAnswears += count
+        
         self.currentCount = count
         
         if count >= bestGame.correctAnswears {
@@ -57,17 +69,26 @@ class StatisticService: StatisticServiceProtocol {
             
             bestGame.correctAnswears = count
             bestGame.date = Date()
-            
         }
-        
-        let newTotalAccuracy = (Double(count) / Double(questionsQuantity)) * 100
-        totalAccuracy = newTotalAccuracy
         
         bestGame.totalGamesPlayed+=1
         
-        let textResult = "Ваш результат: \(currentCount)/10 \n Количество сыгранных квизов: \(bestGame.totalGamesPlayed) \n Рекорд: \(bestGame.correctAnswears)/10 (\(bestGame.date.dateTimeString)) \n Средняя точность: \(totalAccuracy.formatWithTwoDecimalPlaces())%"
+        let newTotalAccuracy = ((Double(totalCorrectAnswears) / Double(10 * bestGame.totalGamesPlayed))) * 100
+        totalAccuracy = newTotalAccuracy
         
-        delegate?.didReceiveAlerttext(text: textResult)
+        if totalCorrectAnswears != 0 {
+        let textResult = """
+        Ваш результат: \(currentCount)/10
+        Количество сыгранных квизов: \(bestGame.totalGamesPlayed)
+        Рекорд: \(bestGame.correctAnswears)/10 (\(bestGame.date.dateTimeString))
+        Средняя точность: \(totalAccuracy.formatWithTwoDecimalPlaces())%
+        """
+            
+            delegate?.didReceiveAlerttext(text: textResult)
+        } else {
+            let texFailure = "Ни одного правильного ответа("
+            delegate?.didReceiveAlerttext(text: texFailure)
+        }
     }
     
     func clearUserDefaults() {
@@ -75,6 +96,7 @@ class StatisticService: StatisticServiceProtocol {
         UserDefaults.standard.removeObject(forKey: Keys.totalAccuracy.rawValue)
         UserDefaults.standard.removeObject(forKey: Keys.bestCorrectAnswears.rawValue)
         UserDefaults.standard.removeObject(forKey: Keys.totalGamesPlayed.rawValue)
+        UserDefaults.standard.removeObject(forKey: Keys.totalCorrectAnswears.rawValue)
         UserDefaults.standard.removeObject(forKey: "date")
     }
 }
