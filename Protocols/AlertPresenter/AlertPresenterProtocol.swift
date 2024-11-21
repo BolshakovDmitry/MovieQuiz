@@ -2,5 +2,5 @@
 import Foundation
 
 protocol AlertPresenterProtocol {
-    static func showAlert(with resultViewModel: QuizResultsViewModel, delegate: AlertPresenterDelegate?)
+    static func showAlert(with resultViewModel: Alertmodel, delegate: AlertPresenterDelegate?)
 }

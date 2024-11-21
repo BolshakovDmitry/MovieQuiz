@@ -6,6 +6,7 @@ final class MovieQuizViewController: UIViewController {
     @IBOutlet private weak var counterLabel: UILabel!
     @IBOutlet private weak var yesButton: UIButton!
     @IBOutlet private weak var noButton: UIButton!
+    @IBOutlet private weak var activityIndicator: UIActivityIndicatorView!
     
     private var questionFactory: QuestionFactoryProtocol?
     private var currentQuestion: QuizQuestion?
@@ -14,7 +15,7 @@ final class MovieQuizViewController: UIViewController {
     private let questionsAmount: Int = 10
     private var currentQuestionIndex = 0
     private var correctAnswers = 0
-    private var textForAlert = QuizResultsViewModel(title: "", text: "", buttonText: "", completion:{})
+    private var textForAlert = Alertmodel(title: "", text: "", buttonText: "", completion:{})
     
     override func viewDidLoad() {
         
@@ -22,6 +23,8 @@ final class MovieQuizViewController: UIViewController {
         
         picture.layer.masksToBounds = true
         picture.layer.borderWidth = 8
+        activityIndicator.color = UIColor(white: 1.0, alpha: 1.0)
+        activityIndicator.transform = CGAffineTransform(scaleX: 2.0, y: 2.0)
         
         let qf = QuestionFactory() // экземпляр фабрики Вопросов
         qf.delegate = self
@@ -31,7 +34,34 @@ final class MovieQuizViewController: UIViewController {
         ss.delegate = self
         self.statisticService = ss
         
-        questionFactory?.requestNextQuestion() // запрос вопроса для показа картинки и начала квиза
+        showLoadingIndicator()
+        questionFactory?.loadData() // запрос вопроса для показа картинки и начала квиза
+    }
+    
+    private func showLoadingIndicator() {
+        activityIndicator.isHidden = false // говорим, что индикатор загрузки не скрыт
+        activityIndicator.startAnimating() // включаем анимацию
+
+    }
+    
+    
+    private func hideLoadingIndicator() {
+        activityIndicator.isHidden = true // скрываем индикатор загрузки
+        activityIndicator.stopAnimating() // выключаем анимацию
+    }
+    
+    private func showNetworkError(message: String) {
+        
+        hideLoadingIndicator()
+        
+        let failToDownloadText = Alertmodel(title: "Ошибка", text: message, buttonText: "Попробовать еще раз", completion:{
+        self.questionFactory?.loadData()
+        self.currentQuestionIndex = 0 // обнуляем поля для нового квиза
+        self.correctAnswers = 0
+        self.counterLabel.text = "1/10" }
+        )
+    
+        AlertPresenter.showAlert(with: failToDownloadText, delegate: self)
     }
     
     @IBAction private func yesButtonClicked(_ sender: UIButton) { //сравниваем результат ответа с правильным из массива и вызываем метод для отображения результат ответа(в виде цветной рамки вокруг картинки)
@@ -82,7 +112,7 @@ final class MovieQuizViewController: UIViewController {
     
     private func showPicture(question: QuizQuestion?) { // обновляет картинку и убирает цвет рамки
         guard let theQuestion = question else { return }
-        picture.image = UIImage(named: theQuestion.image) ?? UIImage()
+        picture.image = UIImage(data: theQuestion.image) ?? UIImage()
         picture.layer.borderColor = UIColor.ypBackground.cgColor
     }
 }
@@ -90,6 +120,18 @@ final class MovieQuizViewController: UIViewController {
 // MARK: - Реализация протокола фабрики вопросов
 
 extension MovieQuizViewController: QuestionFactoryDelegate{
+    
+    func didLoadDataFromServer() {
+        print("in the succsess loading procedure")
+        hideLoadingIndicator()
+        questionFactory?.requestNextQuestion()
+    }
+    
+    func didFailToLoadData(with error: Error) {
+        print("in the fail loading procedure")
+        showNetworkError(message: error.localizedDescription) // возьмём в качестве сообщения описание ошибки
+    }
+    
     func didReceiveNextQuestion(question: QuizQuestion?) { // получение вопроса из фабрики вопросов
         // проверка, что вопрос не nil
         guard let question = question else { return }
@@ -110,7 +152,7 @@ extension MovieQuizViewController: AlertPresenterDelegate{
 
 extension MovieQuizViewController: StatisticServiceDelegate{
     func didReceiveAlerttext(text: String)  {
-        textForAlert = QuizResultsViewModel(title: "Этот раунд окончен!", text: text, buttonText: "Сыграть ещё раз", completion:{
+        textForAlert = Alertmodel(title: "Этот раунд окончен!", text: text, buttonText: "Сыграть ещё раз", completion:{
         self.questionFactory?.requestNextQuestion()
         self.currentQuestionIndex = 0 // обнуляем поля для нового квиза
         self.correctAnswers = 0
