@@ -21,9 +21,9 @@ final class MovieQuizViewController: UIViewController {
         
         super.viewDidLoad()
         
-        picture.layer.masksToBounds = true
+        picture.layer.masksToBounds = true // рамки картинки
         picture.layer.borderWidth = 8
-        activityIndicator.color = UIColor(white: 1.0, alpha: 1.0)
+        activityIndicator.color = UIColor(white: 1.0, alpha: 1.0) // цвет и размер индикатора
         activityIndicator.transform = CGAffineTransform(scaleX: 2.0, y: 2.0)
         
         let qf = QuestionFactory() // экземпляр фабрики Вопросов
@@ -39,13 +39,13 @@ final class MovieQuizViewController: UIViewController {
     }
     
     private func showLoadingIndicator() {
+        
         activityIndicator.isHidden = false // говорим, что индикатор загрузки не скрыт
         activityIndicator.startAnimating() // включаем анимацию
-
     }
     
-    
     private func hideLoadingIndicator() {
+        
         activityIndicator.isHidden = true // скрываем индикатор загрузки
         activityIndicator.stopAnimating() // выключаем анимацию
     }
@@ -54,17 +54,17 @@ final class MovieQuizViewController: UIViewController {
         
         hideLoadingIndicator()
         
-        let failToDownloadText = Alertmodel(title: "Ошибка", text: message, buttonText: "Попробовать еще раз", completion:{
-        self.questionFactory?.loadData()
+        let failToDownloadText = Alertmodel(title: "Ошибка", text: "проблемы с соеденением", buttonText: "Попробовать еще раз", completion:{
+        self.questionFactory?.loadData() // пробуем по новой
         self.currentQuestionIndex = 0 // обнуляем поля для нового квиза
         self.correctAnswers = 0
         self.counterLabel.text = "1/10" }
         )
     
-        AlertPresenter.showAlert(with: failToDownloadText, delegate: self)
+        AlertPresenter.showAlert(with: failToDownloadText, delegate: self) // вызываем алерту с ошибкой
     }
     
-    @IBAction private func yesButtonClicked(_ sender: UIButton) { //сравниваем результат ответа с правильным из массива и вызываем метод для отображения результат ответа(в виде цветной рамки вокруг картинки)
+    @IBAction private func yesButtonClicked(_ sender: UIButton) { // сравниваем результат ответа с правильным и вызываем метод для отображения результат ответа(в виде цветной рамки вокруг картинки)
         makeButtonsDisable(toggle: true) // блок клавиш на время показа рамки рехультата (1 сек)
         guard let theCurrentQuestion = currentQuestion else { return }
         let givenAnswer = true
@@ -72,13 +72,15 @@ final class MovieQuizViewController: UIViewController {
     }
     
     @IBAction private func noButtonClicked(_ sender: UIButton) {
+        
         makeButtonsDisable(toggle: true)
         guard let theCurrentQuestion = currentQuestion else { return }
         let givenAnswer = false
         showAnswerResult(isCorrect: givenAnswer == theCurrentQuestion.correctAnswer)
     }
     
-    private func makeButtonsDisable(toggle: Bool) {
+    private func makeButtonsDisable(toggle: Bool) { // блок кнопок
+        
         if toggle {
             yesButton.isEnabled = !true
             noButton.isEnabled = !true
@@ -89,6 +91,7 @@ final class MovieQuizViewController: UIViewController {
     }
     
     private func showAnswerResult(isCorrect: Bool) { // окраска картинки в зеленый/красный цвет в зависимости от правильности ответа
+        
         picture.layer.borderColor = isCorrect ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
         if isCorrect {
             correctAnswers += 1 // если ответ корректный инкрементируем correctAnswers
@@ -122,13 +125,11 @@ final class MovieQuizViewController: UIViewController {
 extension MovieQuizViewController: QuestionFactoryDelegate{
     
     func didLoadDataFromServer() {
-        print("in the succsess loading procedure")
         hideLoadingIndicator()
         questionFactory?.requestNextQuestion()
     }
     
     func didFailToLoadData(with error: Error) {
-        print("in the fail loading procedure")
         showNetworkError(message: error.localizedDescription) // возьмём в качестве сообщения описание ошибки
     }
     
@@ -143,6 +144,7 @@ extension MovieQuizViewController: QuestionFactoryDelegate{
 // MARK: - Реализация протокола алерты
 
 extension MovieQuizViewController: AlertPresenterDelegate{
+    
     func presentAlert(alert: UIAlertController) {
         self.present(alert, animated: true, completion: {})
     }
@@ -151,6 +153,7 @@ extension MovieQuizViewController: AlertPresenterDelegate{
 // MARK: - Реализация протокола данных для алерты(лучшая игра/время/текущий счет)
 
 extension MovieQuizViewController: StatisticServiceDelegate{
+    
     func didReceiveAlerttext(text: String)  {
         textForAlert = Alertmodel(title: "Этот раунд окончен!", text: text, buttonText: "Сыграть ещё раз", completion:{
         self.questionFactory?.requestNextQuestion()

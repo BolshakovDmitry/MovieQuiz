@@ -7,9 +7,8 @@ final class QuestionFactory: QuestionFactoryProtocol {
     private let moviesLoader = MoviesLoader()
     weak var delegate: QuestionFactoryDelegate?
     
-    
     func loadData() {
-        print("starting loading")
+       
         moviesLoader.loadMovies { [weak self] result in
             DispatchQueue.main.async {
                 guard let self = self else { return }
@@ -24,52 +23,8 @@ final class QuestionFactory: QuestionFactoryProtocol {
         }
     }
     
-    
-//    private let questions: [QuizQuestion] = [
-//       QuizQuestion(
-//           image: "The Godfather",
-//           rating: 9.2,
-//           correctAnswer: true),
-//       QuizQuestion(
-//           image: "The Dark Knight",
-//           rating: 9,
-//           correctAnswer: true),
-//       QuizQuestion(
-//           image: "Kill Bill",
-//           rating: 8.1,
-//           correctAnswer: true),
-//       QuizQuestion(
-//           image: "The Avengers",
-//           rating: 8,
-//           correctAnswer: true),
-//       QuizQuestion(
-//           image: "Deadpool",
-//           rating: 8,
-//           correctAnswer: true),
-//       QuizQuestion(
-//           image: "The Green Knight",
-//           rating: 6.6,
-//           correctAnswer: true),
-//       QuizQuestion(
-//           image: "Old",
-//           rating: 5.8,
-//           correctAnswer: false),
-//       QuizQuestion(
-//           image: "The Ice Age Adventures of Buck Wild",
-//           rating: 4.3,
-//           correctAnswer: false),
-//       QuizQuestion(
-//           image: "Tesla",
-//           rating: 5.1,
-//           correctAnswer: false),
-//       QuizQuestion(
-//           image: "Vivarium",
-//           rating: 5.8,
-//           correctAnswer: false)
-//    ]
-    
     func requestNextQuestion() {
-        print(movies)
+        
         DispatchQueue.global().async { [weak self] in
             guard let self = self else { return }
             let index = (0..<self.movies.count).randomElement() ?? 0
@@ -92,14 +47,55 @@ final class QuestionFactory: QuestionFactoryProtocol {
             let question = QuizQuestion(image: imageData,
                                          text: text,
                                          correctAnswer: correctAnswer)
-            
-            print(question)
-            print(movies)
-            
+         
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
                 self.delegate?.didReceiveNextQuestion(question: question)
             }
         }
-    } 
+    }
+    
+    //    private let questions: [QuizQuestion] = [
+    //       QuizQuestion(
+    //           image: "The Godfather",
+    //           rating: 9.2,
+    //           correctAnswer: true),
+    //       QuizQuestion(
+    //           image: "The Dark Knight",
+    //           rating: 9,
+    //           correctAnswer: true),
+    //       QuizQuestion(
+    //           image: "Kill Bill",
+    //           rating: 8.1,
+    //           correctAnswer: true),
+    //       QuizQuestion(
+    //           image: "The Avengers",
+    //           rating: 8,
+    //           correctAnswer: true),
+    //       QuizQuestion(
+    //           image: "Deadpool",
+    //           rating: 8,
+    //           correctAnswer: true),
+    //       QuizQuestion(
+    //           image: "The Green Knight",
+    //           rating: 6.6,
+    //           correctAnswer: true),
+    //       QuizQuestion(
+    //           image: "Old",
+    //           rating: 5.8,
+    //           correctAnswer: false),
+    //       QuizQuestion(
+    //           image: "The Ice Age Adventures of Buck Wild",
+    //           rating: 4.3,
+    //           correctAnswer: false),
+    //       QuizQuestion(
+    //           image: "Tesla",
+    //           rating: 5.1,
+    //           correctAnswer: false),
+    //       QuizQuestion(
+    //           image: "Vivarium",
+    //           rating: 5.8,
+    //           correctAnswer: false)
+    //    ]
+        
 }
