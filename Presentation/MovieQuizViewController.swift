@@ -54,7 +54,7 @@ final class MovieQuizViewController: UIViewController {
         
         hideLoadingIndicator()
         
-        let failToDownloadText = Alertmodel(title: "Ошибка", text: "проблемы с соеденением", buttonText: "Попробовать еще раз", completion:{
+        let failToDownloadText = Alertmodel(title: "что-то пошло не так(", text: "невозможно загрузить данные", buttonText: "Попробовать еще раз", completion:{
         self.questionFactory?.loadData() // пробуем по новой
         self.currentQuestionIndex = 0 // обнуляем поля для нового квиза
         self.correctAnswers = 0
