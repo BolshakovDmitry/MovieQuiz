@@ -12,15 +12,16 @@ final class MovieQuizViewController: UIViewController {
     private var questionFactory: QuestionFactoryProtocol?
     private var currentQuestion: QuizQuestion?
     private var statisticService: StatisticServiceProtocol?
+    private let presenter = MovieQuizPresenter()
     
-    private let questionsAmount: Int = 10
-    private var currentQuestionIndex = 0
     private var correctAnswers = 0
     private var textForAlert = AlertModel(title: "", text: "", buttonText: "", completion:{})
     
     override func viewDidLoad() {
         
         super.viewDidLoad()
+        
+        presenter.viewController = self
         
         picture.layer.masksToBounds = true // рамки картинки
         picture.layer.borderWidth = 8
@@ -55,7 +56,7 @@ final class MovieQuizViewController: UIViewController {
         
         let failToDownloadText = AlertModel(title: message, text: "невозможно загрузить данные", buttonText: "Попробовать еще раз", completion:{
             self.questionFactory?.loadData() // пробуем по новой
-            self.currentQuestionIndex = 0 // обнуляем поля для нового квиза
+            self.presenter.resetQuestionIndex() // обнуляем поля для нового квиза
             self.correctAnswers = 0
             self.counterLabel.text = "1/10" }
         )
@@ -63,20 +64,18 @@ final class MovieQuizViewController: UIViewController {
         AlertPresenter.showAlert(with: failToDownloadText, delegate: self) // вызываем алерту с ошибкой
     }
     
-    @IBAction private func yesButtonClicked(_ sender: UIButton) { // сравниваем результат ответа с правильным и вызываем метод для отображения результат ответа(в виде цветной рамки вокруг картинки)
+    @IBAction func yesButtonClicked(_ sender: UIButton) { // сравниваем результат ответа с правильным и вызываем метод для отображения результат ответа(в виде цветной рамки вокруг картинки)
         
         makeButtonsDisable(toggle: true) // блок клавиш на время показа рамки рехультата (1 сек)
-        guard let theCurrentQuestion = currentQuestion else { return }
-        let givenAnswer = true
-        showAnswerResult(isCorrect: givenAnswer == theCurrentQuestion.correctAnswer)
+        presenter.currentQuestion = currentQuestion
+        presenter.yesButtonClicked()
     }
     
-    @IBAction private func noButtonClicked(_ sender: UIButton) {
+    @IBAction func noButtonClicked(_ sender: UIButton) {
         
         makeButtonsDisable(toggle: true)
-        guard let theCurrentQuestion = currentQuestion else { return }
-        let givenAnswer = false
-        showAnswerResult(isCorrect: givenAnswer == theCurrentQuestion.correctAnswer)
+        presenter.currentQuestion = currentQuestion
+        presenter.noButtonClicked()
     }
     
     private func makeButtonsDisable(toggle: Bool) { // блок кнопок
@@ -90,7 +89,7 @@ final class MovieQuizViewController: UIViewController {
         }
     }
     
-    private func showAnswerResult(isCorrect: Bool) { // окраска картинки в зеленый/красный цвет в зависимости от правильности ответа
+    func showAnswerResult(isCorrect: Bool) { // окраска картинки в зеленый/красный цвет в зависимости от правильности ответа
         picture.layer.borderColor = isCorrect ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
         textLabel.text = "загрузка..."
         if isCorrect {
@@ -103,12 +102,12 @@ final class MovieQuizViewController: UIViewController {
     }
     
     private func showNextQuestionOrResults() {
-        if currentQuestionIndex == questionsAmount - 1 { // конец квиза и логика для отображения алерты с результатми
-            statisticService?.store(correct: correctAnswers, total: questionsAmount)
+        if presenter.isLastQuestion() { // конец квиза и логика для отображения алерты с результатми
+            statisticService?.store(correct: correctAnswers, total: presenter.questionsAmount)
             AlertPresenter.showAlert(with: textForAlert, delegate: self)
         } else { // не конец, показывем след картинку
-            currentQuestionIndex += 1
-            counterLabel.text = "\(currentQuestionIndex + 1)/10"
+            presenter.switchToNextQuestion()
+            counterLabel.text = "\(presenter.getCurrentQuestion() + 1)/10"
             showLoadingIndicator()
             questionFactory?.requestNextQuestion()
         }
@@ -158,10 +157,10 @@ extension MovieQuizViewController: AlertPresenterDelegate{
 
 extension MovieQuizViewController: StatisticServiceDelegate{
     
-    func didReceiveAlerttext(text: String)  {
+    func didReceiveAlertText(text: String)  {
         textForAlert = AlertModel(title: "Этот раунд окончен!", text: text, buttonText: "Сыграть ещё раз", completion:{
             self.questionFactory?.requestNextQuestion()
-            self.currentQuestionIndex = 0 // обнуляем поля для нового квиза
+            self.presenter.resetQuestionIndex() // обнуляем поля для нового квиза
             self.correctAnswers = 0
             self.counterLabel.text = "1/10" }
         )

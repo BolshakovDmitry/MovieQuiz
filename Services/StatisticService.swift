@@ -84,10 +84,10 @@ final class StatisticService: StatisticServiceProtocol {
         Средняя точность: \(totalAccuracy.formatWithTwoDecimalPlaces())%
         """
             
-            delegate?.didReceiveAlerttext(text: textResult)
+            delegate?.didReceiveAlertText(text: textResult)
         } else {
             let texFailure = "Ни одного правильного ответа("
-            delegate?.didReceiveAlerttext(text: texFailure)
+            delegate?.didReceiveAlertText(text: texFailure)
         }
     }
     
