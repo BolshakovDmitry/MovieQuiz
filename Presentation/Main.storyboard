@@ -141,6 +141,7 @@
                         <outlet property="counterLabel" destination="gu3-Ub-8TH" id="qpc-ni-2L6"/>
                         <outlet property="noButton" destination="ZV7-gu-Qry" id="n40-lA-LlV"/>
                         <outlet property="picture" destination="5kz-OH-M7N" id="4l9-Nc-jB6"/>
+                        <outlet property="textLabel" destination="wNG-ks-4hH" id="L8H-E3-V2R"/>
                         <outlet property="yesButton" destination="E6H-QZ-Js5" id="kYb-KE-Ttx"/>
                     </connections>
                 </viewController>

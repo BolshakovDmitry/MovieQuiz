@@ -2,10 +2,6 @@
 import Foundation
 
 struct NetworkClient {
-
-    private enum NetworkError: Error {
-        case codeError
-    }
     
     func fetch(url: URL, handler: @escaping (Result<Data, Error>) -> Void) {
         
@@ -20,14 +16,25 @@ struct NetworkClient {
             
             // Проверяем, что нам пришёл успешный код ответа
             if let response = response as? HTTPURLResponse,
-                response.statusCode < 200 || response.statusCode >= 300 {
+               response.statusCode < 200 || response.statusCode >= 300 {
                 handler(.failure(NetworkError.codeError))
                 return
             }
             
+            guard let errorData = data else { return }
+            print(errorData)
+            do {
+                let clientError = try JSONDecoder().decode(ClientError.self, from: errorData)
+                if clientError.items.isEmpty{
+                    handler(.failure(NetworkError.clientError))
+                }
+            } catch {
+            
+            }
+        
             // Возвращаем данные
-            guard let data = data else { return }
-            handler(.success(data))
+            guard let resultData = data else { return }
+            handler(.success(resultData))
         }
         
         task.resume()

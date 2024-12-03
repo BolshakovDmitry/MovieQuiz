@@ -12,8 +12,9 @@ struct MostPopularMovie: Codable {
     let imageURL: URL
     
     private enum CodingKeys: String, CodingKey {
-    case title = "fullTitle"
-    case rating = "imDbRating"
-    case imageURL = "image"
+        case title = "fullTitle"
+        case rating = "imDbRating"
+        case imageURL = "image"
     }
 }
+

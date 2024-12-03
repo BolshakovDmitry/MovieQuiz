@@ -1,7 +1,7 @@
 
 import Foundation
 
-struct Alertmodel {
+struct AlertModel {
     var title: String
     var text: String
     var buttonText: String

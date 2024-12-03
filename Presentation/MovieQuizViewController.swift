@@ -7,6 +7,7 @@ final class MovieQuizViewController: UIViewController {
     @IBOutlet private weak var yesButton: UIButton!
     @IBOutlet private weak var noButton: UIButton!
     @IBOutlet private weak var activityIndicator: UIActivityIndicatorView!
+    @IBOutlet private weak var textLabel: UILabel!
     
     private var questionFactory: QuestionFactoryProtocol?
     private var currentQuestion: QuizQuestion?
@@ -15,7 +16,7 @@ final class MovieQuizViewController: UIViewController {
     private let questionsAmount: Int = 10
     private var currentQuestionIndex = 0
     private var correctAnswers = 0
-    private var textForAlert = Alertmodel(title: "", text: "", buttonText: "", completion:{})
+    private var textForAlert = AlertModel(title: "", text: "", buttonText: "", completion:{})
     
     override func viewDidLoad() {
         
@@ -36,17 +37,15 @@ final class MovieQuizViewController: UIViewController {
         
         showLoadingIndicator()
         questionFactory?.loadData() // запрос вопроса для показа картинки и начала квиза
+        
+        activityIndicator.hidesWhenStopped = true
     }
     
     private func showLoadingIndicator() {
-        
-        activityIndicator.isHidden = false // говорим, что индикатор загрузки не скрыт
         activityIndicator.startAnimating() // включаем анимацию
     }
     
     private func hideLoadingIndicator() {
-        
-        activityIndicator.isHidden = true // скрываем индикатор загрузки
         activityIndicator.stopAnimating() // выключаем анимацию
     }
     
@@ -54,17 +53,18 @@ final class MovieQuizViewController: UIViewController {
         
         hideLoadingIndicator()
         
-        let failToDownloadText = Alertmodel(title: "что-то пошло не так(", text: "невозможно загрузить данные", buttonText: "Попробовать еще раз", completion:{
-        self.questionFactory?.loadData() // пробуем по новой
-        self.currentQuestionIndex = 0 // обнуляем поля для нового квиза
-        self.correctAnswers = 0
-        self.counterLabel.text = "1/10" }
+        let failToDownloadText = AlertModel(title: message, text: "невозможно загрузить данные", buttonText: "Попробовать еще раз", completion:{
+            self.questionFactory?.loadData() // пробуем по новой
+            self.currentQuestionIndex = 0 // обнуляем поля для нового квиза
+            self.correctAnswers = 0
+            self.counterLabel.text = "1/10" }
         )
-    
+        
         AlertPresenter.showAlert(with: failToDownloadText, delegate: self) // вызываем алерту с ошибкой
     }
     
     @IBAction private func yesButtonClicked(_ sender: UIButton) { // сравниваем результат ответа с правильным и вызываем метод для отображения результат ответа(в виде цветной рамки вокруг картинки)
+        
         makeButtonsDisable(toggle: true) // блок клавиш на время показа рамки рехультата (1 сек)
         guard let theCurrentQuestion = currentQuestion else { return }
         let givenAnswer = true
@@ -91,8 +91,8 @@ final class MovieQuizViewController: UIViewController {
     }
     
     private func showAnswerResult(isCorrect: Bool) { // окраска картинки в зеленый/красный цвет в зависимости от правильности ответа
-        
         picture.layer.borderColor = isCorrect ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
+        textLabel.text = "загрузка..."
         if isCorrect {
             correctAnswers += 1 // если ответ корректный инкрементируем correctAnswers
         }
@@ -109,6 +109,7 @@ final class MovieQuizViewController: UIViewController {
         } else { // не конец, показывем след картинку
             currentQuestionIndex += 1
             counterLabel.text = "\(currentQuestionIndex + 1)/10"
+            showLoadingIndicator()
             questionFactory?.requestNextQuestion()
         }
     }
@@ -117,10 +118,12 @@ final class MovieQuizViewController: UIViewController {
         guard let theQuestion = question else { return }
         picture.image = UIImage(data: theQuestion.image) ?? UIImage()
         picture.layer.borderColor = UIColor.ypBackground.cgColor
+        textLabel.text = theQuestion.text
     }
 }
 
 // MARK: - Реализация протокола фабрики вопросов
+
 
 extension MovieQuizViewController: QuestionFactoryDelegate{
     
@@ -129,8 +132,8 @@ extension MovieQuizViewController: QuestionFactoryDelegate{
         questionFactory?.requestNextQuestion()
     }
     
-    func didFailToLoadData(with error: Error) {
-        showNetworkError(message: error.localizedDescription) // возьмём в качестве сообщения описание ошибки
+    func didFailToLoadData(with error: String) {
+        showNetworkError(message: error) // возьмём в качестве сообщения описание ошибки
     }
     
     func didReceiveNextQuestion(question: QuizQuestion?) { // получение вопроса из фабрики вопросов
@@ -138,6 +141,7 @@ extension MovieQuizViewController: QuestionFactoryDelegate{
         guard let question = question else { return }
         currentQuestion = question
         showPicture(question: currentQuestion) // отображение картинки из текущего вопроса
+        hideLoadingIndicator()
     }
 }
 
@@ -155,11 +159,11 @@ extension MovieQuizViewController: AlertPresenterDelegate{
 extension MovieQuizViewController: StatisticServiceDelegate{
     
     func didReceiveAlerttext(text: String)  {
-        textForAlert = Alertmodel(title: "Этот раунд окончен!", text: text, buttonText: "Сыграть ещё раз", completion:{
-        self.questionFactory?.requestNextQuestion()
-        self.currentQuestionIndex = 0 // обнуляем поля для нового квиза
-        self.correctAnswers = 0
-        self.counterLabel.text = "1/10" }
+        textForAlert = AlertModel(title: "Этот раунд окончен!", text: text, buttonText: "Сыграть ещё раз", completion:{
+            self.questionFactory?.requestNextQuestion()
+            self.currentQuestionIndex = 0 // обнуляем поля для нового квиза
+            self.correctAnswers = 0
+            self.counterLabel.text = "1/10" }
         )
     }
 }

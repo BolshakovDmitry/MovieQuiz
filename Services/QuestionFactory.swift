@@ -17,7 +17,11 @@ final class QuestionFactory: QuestionFactoryProtocol {
                     self.movies = mostPopularMovies.items
                     self.delegate?.didLoadDataFromServer()
                 case .failure(let error):
-                    self.delegate?.didFailToLoadData(with: error)
+                    print(error)
+                    if error as? NetworkError  == NetworkError.clientError {
+                        self.delegate?.didFailToLoadData(with: "неверный API ключ")
+                    } else {
+                        self.delegate?.didFailToLoadData(with: "что-то пошло не так(") }
                 }
             }
         }
@@ -36,7 +40,7 @@ final class QuestionFactory: QuestionFactoryProtocol {
            do {
                 imageData = try Data(contentsOf: movie.imageURL)
             } catch {
-                print("Failed to load image")
+                self.delegate?.didFailToLoadData(with: "ошибка зазрузки фото")
             }
             
             let rating = Float(movie.rating) ?? 0
