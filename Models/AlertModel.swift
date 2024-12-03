@@ -1,7 +1,7 @@
 
 import Foundation
 
-struct QuizResultsViewModel {
+struct AlertModel {
     var title: String
     var text: String
     var buttonText: String

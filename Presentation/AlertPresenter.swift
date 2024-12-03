@@ -5,7 +5,8 @@ final class AlertPresenter: AlertPresenterProtocol {
     
     weak var delegate: AlertPresenterDelegate?
     
-    static func showAlert(with resultViewModel: QuizResultsViewModel, delegate: AlertPresenterDelegate?){
+    static func showAlert(with resultViewModel: AlertModel, delegate: AlertPresenterDelegate?){
+        
         let alert = UIAlertController(
             title: resultViewModel.title,
             message: resultViewModel.text,
