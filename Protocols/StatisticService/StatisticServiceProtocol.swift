@@ -3,6 +3,8 @@ import Foundation
 
 protocol StatisticServiceProtocol {
     
+    var delegate: StatisticServiceDelegate? {get set}
+    
     var bestGame: GameResult { get }
     var totalAccuracy: Double { get }
     var currentCount: Int { get }

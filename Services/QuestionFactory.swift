@@ -33,7 +33,8 @@ final class QuestionFactory: QuestionFactoryProtocol {
             guard let self = self else { return }
             let index = (0..<self.movies.count).randomElement() ?? 0
             
-            guard let movie = self.movies[safe: index] else { return print("returning from requestNextQuestion from QF ") }
+           
+            guard let movie = self.movies[safe: index] else { return print("returning from requestNextQuestion from QuestionFactory ") }
             
             var imageData = Data()
            

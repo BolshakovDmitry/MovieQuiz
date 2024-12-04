@@ -59,6 +59,8 @@ final class StatisticService: StatisticServiceProtocol {
         
     func store(correct count: Int, total questionsQuantity: Int) {
         
+        print("in the statistic service")
+        
         self.totalCorrectAnswears += count
         
         self.currentCount = count

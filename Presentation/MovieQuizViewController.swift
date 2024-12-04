@@ -9,24 +9,24 @@ final class MovieQuizViewController: UIViewController {
     @IBOutlet private weak var activityIndicator: UIActivityIndicatorView!
     @IBOutlet private weak var textLabel: UILabel!
     
-    private var questionFactory: QuestionFactoryProtocol?
-    private var currentQuestion: QuizQuestion?
-    private var statisticService: StatisticServiceProtocol?
-    private let presenter = MovieQuizPresenter()
+    var questionFactory: QuestionFactoryProtocol? //убрал прайвэт
     
-    private var correctAnswers = 0
-    private var textForAlert = AlertModel(title: "", text: "", buttonText: "", completion:{})
+    var statisticService: StatisticServiceProtocol?
+    private var presenter: MovieQuizPresenter?
+   
     
     override func viewDidLoad() {
         
         super.viewDidLoad()
         
-        presenter.viewController = self
+        let presenterScope = MovieQuizPresenter(viewController: self)
+        self.presenter = presenterScope
         
         picture.layer.masksToBounds = true // рамки картинки
         picture.layer.borderWidth = 8
         activityIndicator.color = UIColor(white: 1.0, alpha: 1.0) // цвет и размер индикатора
         activityIndicator.transform = CGAffineTransform(scaleX: 2.0, y: 2.0)
+        activityIndicator.hidesWhenStopped = true
         
         let qf = QuestionFactory() // экземпляр фабрики Вопросов
         qf.delegate = self
@@ -39,25 +39,24 @@ final class MovieQuizViewController: UIViewController {
         showLoadingIndicator()
         questionFactory?.loadData() // запрос вопроса для показа картинки и начала квиза
         
-        activityIndicator.hidesWhenStopped = true
+        
     }
     
-    private func showLoadingIndicator() {
+    func showLoadingIndicator() {
         activityIndicator.startAnimating() // включаем анимацию
     }
     
-    private func hideLoadingIndicator() {
+     func hideLoadingIndicator() {
         activityIndicator.stopAnimating() // выключаем анимацию
     }
     
-    private func showNetworkError(message: String) {
+    func showNetworkError(message: String) {
         
         hideLoadingIndicator()
         
         let failToDownloadText = AlertModel(title: message, text: "невозможно загрузить данные", buttonText: "Попробовать еще раз", completion:{
             self.questionFactory?.loadData() // пробуем по новой
-            self.presenter.resetQuestionIndex() // обнуляем поля для нового квиза
-            self.correctAnswers = 0
+            self.presenter?.resetQuestionIndex() // обнуляем поля для нового квиза
             self.counterLabel.text = "1/10" }
         )
         
@@ -66,16 +65,14 @@ final class MovieQuizViewController: UIViewController {
     
     @IBAction func yesButtonClicked(_ sender: UIButton) { // сравниваем результат ответа с правильным и вызываем метод для отображения результат ответа(в виде цветной рамки вокруг картинки)
         
-        makeButtonsDisable(toggle: true) // блок клавиш на время показа рамки рехультата (1 сек)
-        presenter.currentQuestion = currentQuestion
-        presenter.yesButtonClicked()
+        makeButtonsDisable(toggle: true) // блок клавиш на время показа рамки рехультата (1 сек
+        presenter?.yesButtonClicked()
     }
     
     @IBAction func noButtonClicked(_ sender: UIButton) {
         
         makeButtonsDisable(toggle: true)
-        presenter.currentQuestion = currentQuestion
-        presenter.noButtonClicked()
+        presenter?.noButtonClicked()
     }
     
     private func makeButtonsDisable(toggle: Bool) { // блок кнопок
@@ -92,28 +89,29 @@ final class MovieQuizViewController: UIViewController {
     func showAnswerResult(isCorrect: Bool) { // окраска картинки в зеленый/красный цвет в зависимости от правильности ответа
         picture.layer.borderColor = isCorrect ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
         textLabel.text = "загрузка..."
+        counterLabel.text = "\(presenter?.getCurrentQuestion()+1)/10"
         if isCorrect {
-            correctAnswers += 1 // если ответ корректный инкрементируем correctAnswers
+            presenter?.increaseCorrectAnswearCount() // если ответ корректный инкрементируем correctAnswers
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            self.showNextQuestionOrResults() // показ либо след вопроса либо алерты и данными
+            self.presenter?.showNextQuestionOrResults() // показ либо след вопроса либо алерты и данными
             self.makeButtonsDisable(toggle: false)
         }
     }
     
-    private func showNextQuestionOrResults() {
-        if presenter.isLastQuestion() { // конец квиза и логика для отображения алерты с результатми
-            statisticService?.store(correct: correctAnswers, total: presenter.questionsAmount)
-            AlertPresenter.showAlert(with: textForAlert, delegate: self)
-        } else { // не конец, показывем след картинку
-            presenter.switchToNextQuestion()
-            counterLabel.text = "\(presenter.getCurrentQuestion() + 1)/10"
-            showLoadingIndicator()
-            questionFactory?.requestNextQuestion()
-        }
-    }
+//    private func showNextQuestionOrResults() {
+//        if presenter.isLastQuestion() { // конец квиза и логика для отображения алерты с результатми
+//            statisticService?.store(correct: presenter.correctAnswers, total: presenter.questionsAmount)
+//            AlertPresenter.showAlert(with: textForAlert, delegate: self)
+//        } else { // не конец, показывем след картинку
+//            presenter.switchToNextQuestion()
+//            counterLabel.text = "\(presenter.getCurrentQuestion() + 1)/10"
+//            showLoadingIndicator()
+//            questionFactory?.requestNextQuestion()
+//        }
+//    }
     
-    private func showPicture(question: QuizQuestion?) { // обновляет картинку и убирает цвет рамки
+     func showPicture(question: QuizQuestion?) { // обновляет картинку и убирает цвет рамки
         guard let theQuestion = question else { return }
         picture.image = UIImage(data: theQuestion.image) ?? UIImage()
         picture.layer.borderColor = UIColor.ypBackground.cgColor
@@ -135,11 +133,14 @@ extension MovieQuizViewController: QuestionFactoryDelegate{
         showNetworkError(message: error) // возьмём в качестве сообщения описание ошибки
     }
     
-    func didReceiveNextQuestion(question: QuizQuestion?) { // получение вопроса из фабрики вопросов
-        // проверка, что вопрос не nil
-        guard let question = question else { return }
-        currentQuestion = question
-        showPicture(question: currentQuestion) // отображение картинки из текущего вопроса
+    func didReceiveNextQuestion(question: QuizQuestion?) {
+        presenter?.didRecieveNextQuestion(question: question)
+        
+//        // получение вопроса из фабрики вопросов
+//        // проверка, что вопрос не nil
+//        guard let question = question else { return }
+//        currentQuestion = question
+//        showPicture(question: currentQuestion) // отображение картинки из текущего вопроса
         hideLoadingIndicator()
     }
 }
@@ -153,16 +154,15 @@ extension MovieQuizViewController: AlertPresenterDelegate{
     }
 }
 
-// MARK: - Реализация протокола данных для алерты(лучшая игра/время/текущий счет)
+// MARK: - Реализация протокола статистики (лучшая игра/время/текущий счет)
 
 extension MovieQuizViewController: StatisticServiceDelegate{
     
     func didReceiveAlertText(text: String)  {
-        textForAlert = AlertModel(title: "Этот раунд окончен!", text: text, buttonText: "Сыграть ещё раз", completion:{
-            self.questionFactory?.requestNextQuestion()
-            self.presenter.resetQuestionIndex() // обнуляем поля для нового квиза
-            self.correctAnswers = 0
-            self.counterLabel.text = "1/10" }
-        )
+        let textForAlert = AlertModel(title: "Этот раунд окончен!", text: text, buttonText: "Сыграть ещё раз", completion:{
+            self.presenter?.questionFactory?.loadData()
+        })
+        
+        AlertPresenter.showAlert(with: textForAlert, delegate: self)
     }
 }
