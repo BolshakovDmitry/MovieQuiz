@@ -12,6 +12,7 @@ final class MovieQuizViewController: UIViewController {
     private var presenter: MovieQuizPresenter?
    
     override func viewDidLoad() {
+        
         super.viewDidLoad()
         
         let presenterScope = MovieQuizPresenter(viewController: self)
@@ -24,7 +25,6 @@ final class MovieQuizViewController: UIViewController {
         activityIndicator.hidesWhenStopped = true
         
         showLoadingIndicator()
-       
     }
     
     func showLoadingIndicator() {
@@ -45,7 +45,8 @@ final class MovieQuizViewController: UIViewController {
         presenter?.noButtonClicked()
     }
     
-    private func makeButtonsDisable(toggle: Bool) { // блок кнопок
+    func makeButtonsDisable(toggle: Bool) { // блок кнопок
+        
         if toggle {
             yesButton.isEnabled = !true
             noButton.isEnabled = !true
@@ -56,21 +57,15 @@ final class MovieQuizViewController: UIViewController {
     }
     
     func highlightImageBorder(isCorrectAnswer: Bool) { // окраска картинки в зеленый/красный цвет в зависимости от правильности ответа
+        
         picture.layer.borderColor = isCorrectAnswer ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
         textLabel.text = "загрузка..."
         guard let test = presenter?.getCurrentQuestion() else { return }
         counterLabel.text = "\(test + 2)/10"
-//        if isCorrect {
-//            presenter?.increaseCorrectAnswearCount() // если ответ корректный инкрементируем correctAnswers
-//        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            //self.presenter?.proceedToNextQuestionOrResults() // показ либо след вопроса либо алерты и данными
-            self.makeButtonsDisable(toggle: false)
-            self.hideLoadingIndicator()
-        }
     }
 
      func showPicture(question: QuizQuestion?) { // обновляет картинку и убирает цвет рамки
+         
         guard let theQuestion = question else { return }
         picture.image = UIImage(data: theQuestion.image) ?? UIImage()
         picture.layer.borderColor = UIColor.ypBackground.cgColor
