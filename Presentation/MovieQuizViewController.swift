@@ -9,14 +9,9 @@ final class MovieQuizViewController: UIViewController {
     @IBOutlet private weak var activityIndicator: UIActivityIndicatorView!
     @IBOutlet private weak var textLabel: UILabel!
     
-    var questionFactory: QuestionFactoryProtocol? //убрал прайвэт
-    
-    var statisticService: StatisticServiceProtocol?
     private var presenter: MovieQuizPresenter?
    
-    
     override func viewDidLoad() {
-        
         super.viewDidLoad()
         
         let presenterScope = MovieQuizPresenter(viewController: self)
@@ -28,18 +23,8 @@ final class MovieQuizViewController: UIViewController {
         activityIndicator.transform = CGAffineTransform(scaleX: 2.0, y: 2.0)
         activityIndicator.hidesWhenStopped = true
         
-        let qf = QuestionFactory() // экземпляр фабрики Вопросов
-        qf.delegate = self
-        self.questionFactory = qf
-        
-        let ss = StatisticService() // экземпляр класса-обработчика данных для показа алерты
-        ss.delegate = self
-        self.statisticService = ss
-        
         showLoadingIndicator()
-        questionFactory?.loadData() // запрос вопроса для показа картинки и начала квиза
-        
-        
+       
     }
     
     func showLoadingIndicator() {
@@ -49,34 +34,18 @@ final class MovieQuizViewController: UIViewController {
      func hideLoadingIndicator() {
         activityIndicator.stopAnimating() // выключаем анимацию
     }
-    
-    func showNetworkError(message: String) {
-        
-        hideLoadingIndicator()
-        
-        let failToDownloadText = AlertModel(title: message, text: "невозможно загрузить данные", buttonText: "Попробовать еще раз", completion:{
-            self.questionFactory?.loadData() // пробуем по новой
-            self.presenter?.resetQuestionIndex() // обнуляем поля для нового квиза
-            self.counterLabel.text = "1/10" }
-        )
-        
-        AlertPresenter.showAlert(with: failToDownloadText, delegate: self) // вызываем алерту с ошибкой
-    }
-    
-    @IBAction func yesButtonClicked(_ sender: UIButton) { // сравниваем результат ответа с правильным и вызываем метод для отображения результат ответа(в виде цветной рамки вокруг картинки)
-        
+
+    @IBAction func yesButtonClicked(_ sender: UIButton) {
         makeButtonsDisable(toggle: true) // блок клавиш на время показа рамки рехультата (1 сек
         presenter?.yesButtonClicked()
     }
     
     @IBAction func noButtonClicked(_ sender: UIButton) {
-        
         makeButtonsDisable(toggle: true)
         presenter?.noButtonClicked()
     }
     
     private func makeButtonsDisable(toggle: Bool) { // блок кнопок
-        
         if toggle {
             yesButton.isEnabled = !true
             noButton.isEnabled = !true
@@ -86,62 +55,30 @@ final class MovieQuizViewController: UIViewController {
         }
     }
     
-    func showAnswerResult(isCorrect: Bool) { // окраска картинки в зеленый/красный цвет в зависимости от правильности ответа
-        picture.layer.borderColor = isCorrect ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
+    func highlightImageBorder(isCorrectAnswer: Bool) { // окраска картинки в зеленый/красный цвет в зависимости от правильности ответа
+        picture.layer.borderColor = isCorrectAnswer ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
         textLabel.text = "загрузка..."
-        counterLabel.text = "\(presenter?.getCurrentQuestion()+1)/10"
-        if isCorrect {
-            presenter?.increaseCorrectAnswearCount() // если ответ корректный инкрементируем correctAnswers
-        }
+        guard let test = presenter?.getCurrentQuestion() else { return }
+        counterLabel.text = "\(test + 2)/10"
+//        if isCorrect {
+//            presenter?.increaseCorrectAnswearCount() // если ответ корректный инкрементируем correctAnswers
+//        }
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            self.presenter?.showNextQuestionOrResults() // показ либо след вопроса либо алерты и данными
+            //self.presenter?.proceedToNextQuestionOrResults() // показ либо след вопроса либо алерты и данными
             self.makeButtonsDisable(toggle: false)
+            self.hideLoadingIndicator()
         }
     }
-    
-//    private func showNextQuestionOrResults() {
-//        if presenter.isLastQuestion() { // конец квиза и логика для отображения алерты с результатми
-//            statisticService?.store(correct: presenter.correctAnswers, total: presenter.questionsAmount)
-//            AlertPresenter.showAlert(with: textForAlert, delegate: self)
-//        } else { // не конец, показывем след картинку
-//            presenter.switchToNextQuestion()
-//            counterLabel.text = "\(presenter.getCurrentQuestion() + 1)/10"
-//            showLoadingIndicator()
-//            questionFactory?.requestNextQuestion()
-//        }
-//    }
-    
+
      func showPicture(question: QuizQuestion?) { // обновляет картинку и убирает цвет рамки
         guard let theQuestion = question else { return }
         picture.image = UIImage(data: theQuestion.image) ?? UIImage()
         picture.layer.borderColor = UIColor.ypBackground.cgColor
         textLabel.text = theQuestion.text
     }
-}
-
-// MARK: - Реализация протокола фабрики вопросов
-
-
-extension MovieQuizViewController: QuestionFactoryDelegate{
     
-    func didLoadDataFromServer() {
-        hideLoadingIndicator()
-        questionFactory?.requestNextQuestion()
-    }
-    
-    func didFailToLoadData(with error: String) {
-        showNetworkError(message: error) // возьмём в качестве сообщения описание ошибки
-    }
-    
-    func didReceiveNextQuestion(question: QuizQuestion?) {
-        presenter?.didRecieveNextQuestion(question: question)
-        
-//        // получение вопроса из фабрики вопросов
-//        // проверка, что вопрос не nil
-//        guard let question = question else { return }
-//        currentQuestion = question
-//        showPicture(question: currentQuestion) // отображение картинки из текущего вопроса
-        hideLoadingIndicator()
+    func updateCounterLabel(){
+        counterLabel.text = "1/10"
     }
 }
 
@@ -154,15 +91,4 @@ extension MovieQuizViewController: AlertPresenterDelegate{
     }
 }
 
-// MARK: - Реализация протокола статистики (лучшая игра/время/текущий счет)
 
-extension MovieQuizViewController: StatisticServiceDelegate{
-    
-    func didReceiveAlertText(text: String)  {
-        let textForAlert = AlertModel(title: "Этот раунд окончен!", text: text, buttonText: "Сыграть ещё раз", completion:{
-            self.presenter?.questionFactory?.loadData()
-        })
-        
-        AlertPresenter.showAlert(with: textForAlert, delegate: self)
-    }
-}

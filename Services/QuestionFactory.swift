@@ -19,7 +19,7 @@ final class QuestionFactory: QuestionFactoryProtocol {
                 case .failure(let error):
                     print(error)
                     if error as? NetworkError  == NetworkError.clientError {
-                        self.delegate?.didFailToLoadData(with: "неверный API ключ")
+                        self.delegate?.didFailToLoadData(with: "неверный или просроченный API ключ")
                     } else {
                         self.delegate?.didFailToLoadData(with: "что-то пошло не так(") }
                 }

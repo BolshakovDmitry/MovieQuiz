@@ -32,7 +32,7 @@ final class MovieQuizPresenter {
     }
     
     func isLastQuestion() -> Bool {
-        currentQuestionIndex == questionsAmount - 1
+        currentQuestionIndex == questionsAmount - 2
     }
     
     func resetQuestionIndex() {
@@ -66,28 +66,44 @@ final class MovieQuizPresenter {
             return
         }
         
+        viewController?.showLoadingIndicator()
+        
         let givenAnswer = isYes
         
-        viewController?.showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
+        proceedWithAnswer(isCorrect: givenAnswer == currentQuestion.correctAnswer)
+    }
+    
+    private func proceedWithAnswer(isCorrect: Bool) {
+       
+        if(isCorrect){
+            correctAnswers+=1
+        }
+
+        viewController?.highlightImageBorder(isCorrectAnswer: isCorrect)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            guard let self = self else { return }
+            self.proceedToNextQuestionOrResults()
+        }
     }
     
     
-    func showNextQuestionOrResults() {
+    
+    
+    func proceedToNextQuestionOrResults() {
         print(currentQuestionIndex)
         if isLastQuestion() { // конец квиза и логика для отображения алерты с результатми
             print("in the end")
-            viewController?.statisticService?.store(correct: correctAnswers, total: questionsAmount) // statisticService?.store(correct: correctAnswers, total: questionsAmount) не работает
+            statisticService?.store(correct: correctAnswers, total: questionsAmount) // statisticService?.store(correct: correctAnswers, total: questionsAmount) не работает
         }
         else { // не конец, показывем след картинку
             print("in the presenter showNextQuestionOrResults ")
-            switchToNextQuestion()
             viewController?.showLoadingIndicator()
-            viewController?.questionFactory?.requestNextQuestion()
+            switchToNextQuestion()
+            questionFactory?.requestNextQuestion()
         }
     }
-    
-    
-    
+
     func didRecieveNextQuestion(question: QuizQuestion?) {
         guard let question = question else {
             return
@@ -111,7 +127,15 @@ final class MovieQuizPresenter {
         }
         
         func didFailToLoadData(with error: String) {
-            viewController?.showNetworkError(message: error) // возьмём в качестве сообщения описание ошибки
+            
+            let failToDownloadText = AlertModel(title: error, text: "невозможно загрузить данные", buttonText: "Попробовать еще раз", completion:{
+                self.questionFactory?.loadData() // пробуем по новой
+                self.resetQuestionIndex() // обнуляем поля для нового квиза
+                self.viewController?.updateCounterLabel()
+                self.viewController?.hideLoadingIndicator()}
+            )
+            
+            AlertPresenter.showAlert(with: failToDownloadText, delegate: self.viewController) // возьмём в качестве сообщения описание ошибки
         }
         
         func didReceiveNextQuestion(question: QuizQuestion?) {
@@ -121,8 +145,8 @@ final class MovieQuizPresenter {
     //        // проверка, что вопрос не nil
     //        guard let question = question else { return }
     //        currentQuestion = question
-    //        showPicture(question: currentQuestion) // отображение картинки из текущего вопроса
-            viewController?.hideLoadingIndicator()
+            viewController?.showPicture(question: currentQuestion) // отображение картинки из текущего вопроса
+            
         }
     }
 
@@ -135,6 +159,7 @@ extension MovieQuizPresenter: StatisticServiceDelegate{
             self.questionFactory?.loadData()
             self.correctAnswers = 0
             self.currentQuestionIndex = 0
+            self.viewController?.updateCounterLabel()
         })
         
         AlertPresenter.showAlert(with: textForAlert, delegate: self.viewController)
