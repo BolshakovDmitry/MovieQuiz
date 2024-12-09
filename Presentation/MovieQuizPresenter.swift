@@ -1,45 +1,26 @@
 import Foundation
+import UIKit
 
 final class MovieQuizPresenter {
     
-     var viewController: MovieQuizViewController?       // убрал прайваты - еадо вернуть
-     var statisticService: StatisticServiceProtocol?
-     var questionFactory: QuestionFactoryProtocol?
-    
-    init(viewController: MovieQuizViewController){
-        
-        self.viewController = viewController
-        
-        self.statisticService = StatisticService()
-        self.statisticService?.delegate = self
-        
-        self.questionFactory = QuestionFactory()
-        self.questionFactory?.delegate = self
-        
-        questionFactory?.loadData()
-        self.viewController?.showLoadingIndicator()
-        
-    }
-      
-    var currentQuestion: QuizQuestion?
-    let questionsAmount: Int = 10
-    var correctAnswers: Int = 0 // make private
+    private var viewController: MovieQuizViewControllerProtocol?       // убрал прайваты - еадо вернуть
+    private var statisticService: StatisticServiceProtocol?
+    private var questionFactory: QuestionFactoryProtocol?
+    private var viewModel: QuizStepViewModel?
+    private var currentQuestion: QuizQuestion?
+    private let questionsAmount: Int = 10
+    private var correctAnswers: Int = 0 // make private
     private var currentQuestionIndex: Int = 0
     
-    func increaseCorrectAnswearCount() {
-        correctAnswers += 1
-    }
-    
-    func isLastQuestion() -> Bool {
-        currentQuestionIndex == questionsAmount - 2
-    }
-
-    func resetCorrectAnswers() {
-        correctAnswers = 0
-    }
-    
-    func switchToNextQuestion() {
-        currentQuestionIndex += 1
+    init(viewController: MovieQuizViewControllerProtocol){
+        
+        self.viewController = viewController
+        self.statisticService = StatisticService()
+        self.statisticService?.delegate = self
+        self.questionFactory = QuestionFactory()
+        self.questionFactory?.delegate = self
+        questionFactory?.loadData()
+        self.viewController?.showLoadingIndicator()
     }
     
     func getCurrentQuestion() -> Int {
@@ -52,6 +33,22 @@ final class MovieQuizPresenter {
     
     func noButtonClicked() {
         didAnswer(isYes: false)
+    }
+    
+    private func increaseCorrectAnswearCount() {
+        correctAnswers += 1
+    }
+    
+    private func isLastQuestion() -> Bool {
+        currentQuestionIndex == questionsAmount - 2
+    }
+    
+    private func resetCorrectAnswers() {
+        correctAnswers = 0
+    }
+    
+    private func switchToNextQuestion() {
+        currentQuestionIndex += 1
     }
     
     private func didAnswer(isYes: Bool) {
@@ -68,25 +65,25 @@ final class MovieQuizPresenter {
     }
     
     private func proceedWithAnswer(isCorrect: Bool) {
-       
-        if(isCorrect){
+        
+        if (isCorrect) {
             correctAnswers+=1
         }
-
+        
         viewController?.highlightImageBorder(isCorrectAnswer: isCorrect)
-
+        
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             guard let self = self else { return }
-            self.proceedToNextQuestionOrResults()
-            self.viewController?.hideLoadingIndicator()
-            self.viewController?.makeButtonsDisable(toggle: false)
+            proceedToNextQuestionOrResults()
+            viewController?.hideLoadingIndicator()
+            viewController?.makeButtonsDisable(toggle: false)
         }
     }
-      
-    func proceedToNextQuestionOrResults() {
+    
+    private func proceedToNextQuestionOrResults() {
         
-        if isLastQuestion() { // конец квиза и логика для отображения алерты с результатми
-            statisticService?.store(correct: correctAnswers, total: questionsAmount) // statisticService?.store(correct: correctAnswers, total: questionsAmount) не работает
+        if isLastQuestion() { // конец квиза - записываем результат в userdefauls, который потом вызывает алерту
+            statisticService?.store(correct: correctAnswers, total: questionsAmount)
         }
         else { // не конец, показывем след картинку
             viewController?.showLoadingIndicator()
@@ -94,48 +91,50 @@ final class MovieQuizPresenter {
             questionFactory?.requestNextQuestion()
         }
     }
-
-    func didRecieveNextQuestion(question: QuizQuestion?) {
+    
+    private func convert(model: QuizQuestion) -> QuizStepViewModel {
         
-        guard let question = question else { return }
+        return QuizStepViewModel(
+            image: model.image,
+            question: model.text
+        )
+    }
+}
+
+// MARK: - Реализация протокола фабрики вопросов
+
+
+extension MovieQuizPresenter: QuestionFactoryDelegate{
+    
+    func didLoadDataFromServer() {
+        
+        viewController?.hideLoadingIndicator()
+        questionFactory?.requestNextQuestion()
+    }
+    
+    func didFailToLoadData(with error: String) {
+        
+        let failToDownloadText = AlertModel(title: error, text: "невозможно загрузить данные", buttonText: "Попробовать еще раз", completion:{
+            self.questionFactory?.loadData() // пробуем по новой
+            self.currentQuestionIndex = 0 // обнуляем поля для нового квиза
+            self.viewController?.updateCounterLabel()
+            self.viewController?.hideLoadingIndicator()}
+        )
+        
+        viewController?.makeAlert(text: failToDownloadText) // возьмём в качестве сообщения описание ошибки
+    }
+    
+    func didReceiveNextQuestion(question: QuizQuestion?) {
+        
         currentQuestion = question
         
-        DispatchQueue.main.async { [weak self] in
-            self?.viewController?.showPicture(question: self?.currentQuestion)
-        }
+        guard let currentQuestion = question else { return }
+        
+        let viewModel = convert(model: currentQuestion)
+        
+        viewController?.showPicture(question: viewModel) // отображение картинки из текущего вопроса
     }
-    
 }
-    
-    // MARK: - Реализация протокола фабрики вопросов
-
-
-    extension MovieQuizPresenter: QuestionFactoryDelegate{
-        
-        func didLoadDataFromServer() {
-            viewController?.hideLoadingIndicator()
-            questionFactory?.requestNextQuestion()
-        }
-        
-        func didFailToLoadData(with error: String) {
-            
-            let failToDownloadText = AlertModel(title: error, text: "невозможно загрузить данные", buttonText: "Попробовать еще раз", completion:{
-                self.questionFactory?.loadData() // пробуем по новой
-                self.currentQuestionIndex = 0 // обнуляем поля для нового квиза
-                self.viewController?.updateCounterLabel()
-                self.viewController?.hideLoadingIndicator()}
-            )
-            
-            AlertPresenter.showAlert(with: failToDownloadText, delegate: self.viewController) // возьмём в качестве сообщения описание ошибки
-        }
-        
-        func didReceiveNextQuestion(question: QuizQuestion?) {
-            
-            currentQuestion = question
-            viewController?.showPicture(question: currentQuestion) // отображение картинки из текущего вопроса
-            
-        }
-    }
 
 // MARK: - Реализация протокола статистики (лучшая игра/время/текущий счет)
 
@@ -149,29 +148,29 @@ extension MovieQuizPresenter: StatisticServiceDelegate{
             self.viewController?.updateCounterLabel()
         })
         
-        AlertPresenter.showAlert(with: textForAlert, delegate: self.viewController)
+        viewController?.makeAlert(text: textForAlert)
     }
 }
 
 
 
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

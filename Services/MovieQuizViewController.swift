@@ -1,7 +1,7 @@
 import UIKit
 
-final class MovieQuizViewController: UIViewController {
-    
+final class MovieQuizViewController: UIViewController, MovieQuizViewControllerProtocol {
+  
     @IBOutlet private weak var picture: UIImageView!
     @IBOutlet private weak var counterLabel: UILabel!
     @IBOutlet private weak var yesButton: UIButton!
@@ -27,22 +27,17 @@ final class MovieQuizViewController: UIViewController {
         showLoadingIndicator()
     }
     
+    
+    func makeAlert(text: AlertModel){
+        AlertPresenter.showAlert(with: text, delegate: self)
+    }
+    
     func showLoadingIndicator() {
         activityIndicator.startAnimating() // включаем анимацию
     }
     
-     func hideLoadingIndicator() {
+    func hideLoadingIndicator() {
         activityIndicator.stopAnimating() // выключаем анимацию
-    }
-
-    @IBAction func yesButtonClicked(_ sender: UIButton) {
-        makeButtonsDisable(toggle: true) // блок клавиш на время показа рамки рехультата (1 сек
-        presenter?.yesButtonClicked()
-    }
-    
-    @IBAction func noButtonClicked(_ sender: UIButton) {
-        makeButtonsDisable(toggle: true)
-        presenter?.noButtonClicked()
     }
     
     func makeButtonsDisable(toggle: Bool) { // блок кнопок
@@ -64,26 +59,28 @@ final class MovieQuizViewController: UIViewController {
         counterLabel.text = "\(test + 2)/10"
     }
 
-     func showPicture(question: QuizQuestion?) { // обновляет картинку и убирает цвет рамки
+    func showPicture(question: QuizStepViewModel) { // обновляет картинку и убирает цвет рамки
          
-        guard let theQuestion = question else { return }
-        picture.image = UIImage(data: theQuestion.image) ?? UIImage()
+        picture.image = UIImage(data: question.image) ?? UIImage()
         picture.layer.borderColor = UIColor.ypBackground.cgColor
-        textLabel.text = theQuestion.text
+        textLabel.text = question.question
     }
     
     func updateCounterLabel(){
         counterLabel.text = "1/10"
     }
-}
 
-// MARK: - Реализация протокола алерты
-
-extension MovieQuizViewController: AlertPresenterDelegate{
-    
-    func presentAlert(alert: UIAlertController) {
-        self.present(alert, animated: true, completion: {})
+    @IBAction func yesButtonClicked(_ sender: UIButton) {
+        makeButtonsDisable(toggle: true) // блок клавиш на время показа рамки рехультата (1 сек
+        presenter?.yesButtonClicked()
     }
-}
+    
+    @IBAction func noButtonClicked(_ sender: UIButton) {
+        makeButtonsDisable(toggle: true)
+        presenter?.noButtonClicked()
+    }
+    
 
+
+}
 

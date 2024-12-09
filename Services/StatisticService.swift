@@ -14,7 +14,7 @@ final class StatisticService: StatisticServiceProtocol {
         case totalGamesPlayed
         case totalCorrectAnswears
     }
-   
+    
     var currentCount: Int {
         get {
             return userDefaults.integer(forKey: Keys.currentCount.rawValue)
@@ -32,7 +32,7 @@ final class StatisticService: StatisticServiceProtocol {
             userDefaults.set(newValue, forKey: Keys.totalCorrectAnswears.rawValue)
         }
     }
-
+    
     var totalAccuracy: Double {
         get {
             return userDefaults.double(forKey: Keys.totalAccuracy.rawValue)
@@ -56,7 +56,7 @@ final class StatisticService: StatisticServiceProtocol {
             userDefaults.set(newBestGame.date, forKey: "date")
         }
     }
-        
+    
     func store(correct count: Int, total questionsQuantity: Int) {
         
         print("in the statistic service")
@@ -79,7 +79,7 @@ final class StatisticService: StatisticServiceProtocol {
         totalAccuracy = newTotalAccuracy
         
         if totalCorrectAnswears != 0 {
-        let textResult = """
+            let textResult = """
         Ваш результат: \(currentCount)/10
         Количество сыгранных квизов: \(bestGame.totalGamesPlayed)
         Рекорд: \(bestGame.correctAnswears)/10 (\(bestGame.date.dateTimeString))
@@ -103,8 +103,8 @@ final class StatisticService: StatisticServiceProtocol {
     }
 }
 
-    
 
-    
-    
+
+
+
 
