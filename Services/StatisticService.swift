@@ -14,7 +14,7 @@ final class StatisticService: StatisticServiceProtocol {
         case totalGamesPlayed
         case totalCorrectAnswears
     }
-   
+    
     var currentCount: Int {
         get {
             return userDefaults.integer(forKey: Keys.currentCount.rawValue)
@@ -32,7 +32,7 @@ final class StatisticService: StatisticServiceProtocol {
             userDefaults.set(newValue, forKey: Keys.totalCorrectAnswears.rawValue)
         }
     }
-
+    
     var totalAccuracy: Double {
         get {
             return userDefaults.double(forKey: Keys.totalAccuracy.rawValue)
@@ -56,8 +56,10 @@ final class StatisticService: StatisticServiceProtocol {
             userDefaults.set(newBestGame.date, forKey: "date")
         }
     }
-        
+    
     func store(correct count: Int, total questionsQuantity: Int) {
+        
+        print("in the statistic service")
         
         self.totalCorrectAnswears += count
         
@@ -77,17 +79,17 @@ final class StatisticService: StatisticServiceProtocol {
         totalAccuracy = newTotalAccuracy
         
         if totalCorrectAnswears != 0 {
-        let textResult = """
+            let textResult = """
         Ваш результат: \(currentCount)/10
         Количество сыгранных квизов: \(bestGame.totalGamesPlayed)
         Рекорд: \(bestGame.correctAnswears)/10 (\(bestGame.date.dateTimeString))
         Средняя точность: \(totalAccuracy.formatWithTwoDecimalPlaces())%
         """
             
-            delegate?.didReceiveAlerttext(text: textResult)
+            delegate?.didReceiveAlertText(text: textResult)
         } else {
             let texFailure = "Ни одного правильного ответа("
-            delegate?.didReceiveAlerttext(text: texFailure)
+            delegate?.didReceiveAlertText(text: texFailure)
         }
     }
     
@@ -101,8 +103,8 @@ final class StatisticService: StatisticServiceProtocol {
     }
 }
 
-    
 
-    
-    
+
+
+
 

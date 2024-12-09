@@ -19,7 +19,7 @@ final class QuestionFactory: QuestionFactoryProtocol {
                 case .failure(let error):
                     print(error)
                     if error as? NetworkError  == NetworkError.clientError {
-                        self.delegate?.didFailToLoadData(with: "неверный API ключ")
+                        self.delegate?.didFailToLoadData(with: "неверный или просроченный API ключ")
                     } else {
                         self.delegate?.didFailToLoadData(with: "что-то пошло не так(") }
                 }
@@ -33,7 +33,8 @@ final class QuestionFactory: QuestionFactoryProtocol {
             guard let self = self else { return }
             let index = (0..<self.movies.count).randomElement() ?? 0
             
-            guard let movie = self.movies[safe: index] else { return print("returning from requestNextQuestion from QF ") }
+           
+            guard let movie = self.movies[safe: index] else { return print("returning from requestNextQuestion from QuestionFactory ") }
             
             var imageData = Data()
            
@@ -58,48 +59,4 @@ final class QuestionFactory: QuestionFactoryProtocol {
             }
         }
     }
-    
-    //    private let questions: [QuizQuestion] = [
-    //       QuizQuestion(
-    //           image: "The Godfather",
-    //           rating: 9.2,
-    //           correctAnswer: true),
-    //       QuizQuestion(
-    //           image: "The Dark Knight",
-    //           rating: 9,
-    //           correctAnswer: true),
-    //       QuizQuestion(
-    //           image: "Kill Bill",
-    //           rating: 8.1,
-    //           correctAnswer: true),
-    //       QuizQuestion(
-    //           image: "The Avengers",
-    //           rating: 8,
-    //           correctAnswer: true),
-    //       QuizQuestion(
-    //           image: "Deadpool",
-    //           rating: 8,
-    //           correctAnswer: true),
-    //       QuizQuestion(
-    //           image: "The Green Knight",
-    //           rating: 6.6,
-    //           correctAnswer: true),
-    //       QuizQuestion(
-    //           image: "Old",
-    //           rating: 5.8,
-    //           correctAnswer: false),
-    //       QuizQuestion(
-    //           image: "The Ice Age Adventures of Buck Wild",
-    //           rating: 4.3,
-    //           correctAnswer: false),
-    //       QuizQuestion(
-    //           image: "Tesla",
-    //           rating: 5.1,
-    //           correctAnswer: false),
-    //       QuizQuestion(
-    //           image: "Vivarium",
-    //           rating: 5.8,
-    //           correctAnswer: false)
-    //    ]
-        
 }

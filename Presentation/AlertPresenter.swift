@@ -1,16 +1,15 @@
-
 import UIKit
 
-final class AlertPresenter: AlertPresenterProtocol {
+final class AlertPresenter {
     
-    weak var delegate: AlertPresenterDelegate?
-    
-    static func showAlert(with resultViewModel: AlertModel, delegate: AlertPresenterDelegate?){
+    static func showAlert(with resultViewModel: AlertModel, delegate: UIViewController?){
         
         let alert = UIAlertController(
             title: resultViewModel.title,
             message: resultViewModel.text,
             preferredStyle: .alert)
+        
+        alert.view.accessibilityIdentifier = "Game results"
         
         let action = UIAlertAction(title: resultViewModel.buttonText, style: .default) { _ in
             resultViewModel.completion()
@@ -18,6 +17,6 @@ final class AlertPresenter: AlertPresenterProtocol {
         
         alert.addAction(action)
         
-        delegate?.presentAlert(alert: alert)
+        delegate?.present(alert, animated: true, completion: {})
     }
 }
