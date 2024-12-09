@@ -35,6 +35,14 @@ final class MovieQuizPresenter {
         didAnswer(isYes: false)
     }
     
+    func convert(model: QuizQuestion) -> QuizStepViewModel {
+       
+       return QuizStepViewModel(
+           image: model.image,
+           question: model.text
+       )
+   }
+    
     private func increaseCorrectAnswearCount() {
         correctAnswers += 1
     }
@@ -90,14 +98,6 @@ final class MovieQuizPresenter {
             switchToNextQuestion()
             questionFactory?.requestNextQuestion()
         }
-    }
-    
-    private func convert(model: QuizQuestion) -> QuizStepViewModel {
-        
-        return QuizStepViewModel(
-            image: model.image,
-            question: model.text
-        )
     }
 }
 
